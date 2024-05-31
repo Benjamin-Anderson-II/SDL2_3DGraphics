@@ -90,17 +90,23 @@ void draw_line(SDL_Surface *surface, Point p0, Point p1, Color c){
     }
 }
 
-void draw_triangle(App *app, Point p1, Point p2, Point p3, Color c){
+void draw_triangle(App *app, Triangle t, Color c){
+    Point p0 = (Point){(int)t.points[0].x, (int)t.points[0].y};
+    Point p1 = (Point){(int)t.points[1].x, (int)t.points[1].y};
+    Point p2 = (Point){(int)t.points[2].x, (int)t.points[2].y};
+    draw_line(app->surface, p0, p1, c);
     draw_line(app->surface, p1, p2, c);
-    draw_line(app->surface, p2, p3, c);
-    draw_line(app->surface, p3, p1, c);
+    draw_line(app->surface, p2, p0, c);
 }
 
-void draw_filledTriangle(App *app, Point p0, Point p1, Point p2, Color c){
+void draw_filledTriangle(App *app, Triangle t, Color c){
     // Approx of Algo:
     // for each horizontal line y between the triangle's top and bottom
     //     compute x_left & x_right for this y
     //     draw line from x_left to x_right
+    Point p0 = (Point){(int)t.points[0].x, (int)t.points[0].y};
+    Point p1 = (Point){(int)t.points[1].x, (int)t.points[1].y};
+    Point p2 = (Point){(int)t.points[2].x, (int)t.points[2].y};
 
     // Sort the points so that y0 <= y1 <= y2
     if(p1.y < p0.y) _swapPoint(&p1, &p0);

@@ -163,20 +163,9 @@ void prepareScene(App *app, Mesh mesh, Mat4x4 matProj, Vec3d vCamera, float elap
     Triangle_sortInc(vecTrianglesToRaster);
 
     for(int i = 0; i < vecTrianglesToRaster->size; i++){
-        draw_filledTriangle(app,
-                           (Point){
-                               DynArr_get(vecTrianglesToRaster, i).triangle.points[0].x, 
-                               DynArr_get(vecTrianglesToRaster, i).triangle.points[0].y
-                           },
-                           (Point){
-                               DynArr_get(vecTrianglesToRaster, i).triangle.points[1].x, 
-                               DynArr_get(vecTrianglesToRaster, i).triangle.points[1].y
-                           },
-                           (Point){
-                               DynArr_get(vecTrianglesToRaster, i).triangle.points[2].x, 
-                               DynArr_get(vecTrianglesToRaster, i).triangle.points[2].y
-                           },
-                           DynArr_get(vecTrianglesToRaster, i).triangle.col);
+        Triangle t = DynArr_get(vecTrianglesToRaster, i).triangle;
+        draw_filledTriangle(app, t, t.col);
+        draw_triangle(app, t, (Color){0,0,0,255});
     }
 }
 
