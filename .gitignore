@@ -1,0 +1,11 @@
+# Ignore build directory
+build/
+
+# Ignore bin directory
+bin/
+
+# Ignore main executable
+3D_Graphics
+
+# Ignore Valgrind files
+vgcore.*
