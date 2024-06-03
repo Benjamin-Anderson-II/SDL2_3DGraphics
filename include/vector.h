@@ -17,4 +17,5 @@ float Vector_length(Vec3d v);
 Vec3d Vector_normalize(Vec3d v);
 Vec3d Vector_crossProd(Vec3d v1, Vec3d v2);
 
+Vec3d Vector_intersectPlane(Vec3d pointOnPlane, Vec3d planeNormal, Vec3d lineStart, Vec3d lineEnd);
 #endif

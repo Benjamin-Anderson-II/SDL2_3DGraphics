@@ -16,6 +16,10 @@ int Input_do(App *app){
             default: break;
         }
         const Uint8 *state = SDL_GetKeyboardState(NULL);
+        Vec3d vForward = Vector_mult(app->vLookDir, 4.0f * app->fElapsedTime);
+
+
+        // This affects position. Make it affect velocity... somehow
         if(state[SDL_SCANCODE_UP])
             app->vCamera.y -= 8.0f * app->fElapsedTime;
         if(state[SDL_SCANCODE_DOWN])
@@ -25,21 +29,14 @@ int Input_do(App *app){
         if(state[SDL_SCANCODE_LEFT])
             app->vCamera.x -= 8.0f * app->fElapsedTime;
 
-
-
-        Vec3d vForward = Vector_mult(app->vLookDir, 8.0f * app->fElapsedTime);
-
         if(state[SDL_SCANCODE_W])
             app->vCamera = Vector_add(app->vCamera, vForward);
-
         if(state[SDL_SCANCODE_S])
             app->vCamera = Vector_sub(app->vCamera, vForward);
-
         if(state[SDL_SCANCODE_A])
-            app->fYaw -= 2.0f * app->fElapsedTime;
-
+            app->fYaw -= 1.0f * app->fElapsedTime;
         if(state[SDL_SCANCODE_D])
-            app->fYaw += 2.0f * app->fElapsedTime;
+            app->fYaw += 1.0f * app->fElapsedTime;
     }
 
     return 0;

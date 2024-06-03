@@ -7,7 +7,7 @@
 #include "mesh.h"
 #include <time.h>
 
-int initApp(App *app);
+int initApp(App *app, float screenWidth, float screenHeight);
 void prepareScene(App *app);
 void presentScene(App *app);
 int doInput();

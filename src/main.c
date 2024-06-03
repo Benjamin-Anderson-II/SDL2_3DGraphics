@@ -1,3 +1,20 @@
+/**
+ * TODO:
+ *   
+ *   Change the fElapsedTime to use SDL functions instead of time.h
+ *   Refactor the `prepareScene` function
+ *   *Actually* fix the mirrored XY issue (dread) [currently just negate xy's in the file_importer and input]
+ *   Fix the issue of lines not drawing correctly (make _interpolation use Bresenham variant)
+ *   Implement z-buffering
+ *   Make keystrokes change velocity instead of position
+ *
+ *
+ *    <- near the end ->
+ *   Implement parallelism GPU (OpenCL) and CPU (OpenMP)
+ *   Refactor the code such that that it can become an engine, rather than a program
+*/
+
+
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,20 +24,17 @@
 #include "../include/draw.h"
 #include "../include/main.h"
 #include "../include/input.h"
+#include "../include/triangle.h"
 
-#define SCREEN_WIDTH    480
-#define SCREEN_HEIGHT   480
+#define SCREEN_WIDTH    800
+#define SCREEN_HEIGHT   800
 #define DELAY           16
 
-// TODO: remove this later
-float fTheta = 0.0f;
-
-int
-main(int argc, const char *argv[]){
+int main(int argc, const char *argv[]){
     App app;
     struct timespec start, stop;
 
-    if(initApp(&app) < 0)
+    if(initApp(&app, SCREEN_WIDTH, SCREEN_HEIGHT) < 0)
         return EXIT_FAILURE;
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
@@ -40,7 +54,7 @@ exit:;
     return EXIT_SUCCESS;
 }
 
-int initApp(App *app){
+int initApp(App *app, float screenWidth, float screenHeight){
     memset(app, 0, sizeof(App));
 
     if(SDL_Init(SDL_INIT_VIDEO) < 0){
@@ -69,13 +83,13 @@ int initApp(App *app){
 
     // add mesh to meshes
     Mesh *mesh = Mesh_new(64);
-    if(read_objAsMesh("objects/axis.obj", mesh))
+    if(read_objAsMesh("objects/mountains.obj", mesh))
         return -1;
     DynArr_add(app->meshes, (dynarr_u)mesh);
 
     // create projection matrix
     app->mProj = Matrix_makeProjection(90.0f, 
-                                    (float) SCREEN_HEIGHT / (float) SCREEN_WIDTH,
+                                    screenHeight / screenWidth,
                                     0.1f,
                                     1000.0f);
 
@@ -88,6 +102,8 @@ int initApp(App *app){
     app->vLookDir = Matrix_multVector(target, matCameraRot);
     app->mCamera = Matrix_pointAt(app->vCamera, target, up);
 
+    app->pixelDepthBuffer = DynArr_new(screenWidth * screenHeight);
+
     fprintf(stderr, "APP INITIALIZED\n");
     return 0;
 }
@@ -95,19 +111,10 @@ int initApp(App *app){
 void prepareScene(App *app){
     // clear the screen
     SDL_FillRect(app->surface, NULL, 0x555555);
+    for(int i = 0; i < app->pixelDepthBuffer->size; i++)
+        app->pixelDepthBuffer->data[i] = (dynarr_u)0.0f;
 
-//  fTheta += 1.0f * app->fElapsedTime;
-
-    // rotation matrices
-//  Mat4x4 matRotZ = Matrix_makeRotationZ(fTheta * 0.5f); 
-//  Mat4x4 matRotX = Matrix_makeRotationX(fTheta);
-
-    Mat4x4 matTrans = Matrix_makeTranslation(0.0f, 0.0f, 5.0f);
-
-    Mat4x4 matWorld;
-//  matWorld = Matrix_multMatrix(matRotZ, matRotX);
-//  matWorld = Matrix_multMatrix(matWorld, matTrans);
-    matWorld = matTrans;
+    Mat4x4 matWorld = Matrix_makeTranslation(0.0f, 0.0f, 5.0f);
 
     Vec3d up = { 0,1,0,1 };
     Vec3d target = { 0,0,1,1 };
@@ -161,29 +168,35 @@ void prepareScene(App *app){
             int col = 255 * ((dp + 1) / 2);
 
             triViewed = Matrix_multTriangle(triTransformed, matView);
+            triViewed.col = (Color){col, col, col, 255};
 
-            // Project Triangle from 3D --> 2D
-            triProjected = Matrix_multTriangle(triViewed, app->mProj);
+            int numClippedTris = 0;
+            Triangle clipped[2];
+            numClippedTris = Triangle_clipAgainstPlane((Vec3d){ 0.0f,0.0f,0.1f,1.0f }, (Vec3d){ 0.0f,0.0f,1.0f,1.0f }, &triViewed, &clipped[0], &clipped[1]);
 
-            // normalize the coordinates
-            triProjected.points[0] = Vector_div(triProjected.points[0], triProjected.points[0].w);
-            triProjected.points[1] = Vector_div(triProjected.points[1], triProjected.points[1].w);
-            triProjected.points[2] = Vector_div(triProjected.points[2], triProjected.points[2].w);
-            triProjected.col = (Color){col, col, col, 255};
+            for(int c = 0; c < numClippedTris; c++){
+                // Project Triangle from 3D --> 2D
+                triProjected = Matrix_multTriangle(clipped[c], app->mProj);
 
-            // Scale into view
-            Vec3d offsetView = {1,1,1,0};
-            triProjected.points[0] = Vector_add(triProjected.points[0], offsetView);
-            triProjected.points[1] = Vector_add(triProjected.points[1], offsetView);
-            triProjected.points[2] = Vector_add(triProjected.points[2], offsetView);
-            triProjected.points[0].x *= 0.5f * (float)SCREEN_WIDTH;
-            triProjected.points[0].y *= 0.5f * (float)SCREEN_HEIGHT;
-            triProjected.points[1].x *= 0.5f * (float)SCREEN_WIDTH;
-            triProjected.points[1].y *= 0.5f * (float)SCREEN_HEIGHT;
-            triProjected.points[2].x *= 0.5f * (float)SCREEN_WIDTH;
-            triProjected.points[2].y *= 0.5f * (float)SCREEN_HEIGHT;
+                // normalize the coordinates
+                triProjected.points[0] = Vector_div(triProjected.points[0], triProjected.points[0].w);
+                triProjected.points[1] = Vector_div(triProjected.points[1], triProjected.points[1].w);
+                triProjected.points[2] = Vector_div(triProjected.points[2], triProjected.points[2].w);
 
-            Mesh_add(vecTrianglesToRaster, triProjected);
+                // Scale into view
+                Vec3d offsetView = {1,1,1,0};
+                triProjected.points[0] = Vector_add(triProjected.points[0], offsetView);
+                triProjected.points[1] = Vector_add(triProjected.points[1], offsetView);
+                triProjected.points[2] = Vector_add(triProjected.points[2], offsetView);
+                triProjected.points[0].x *= 0.5f * (float)SCREEN_WIDTH;
+                triProjected.points[0].y *= 0.5f * (float)SCREEN_HEIGHT;
+                triProjected.points[1].x *= 0.5f * (float)SCREEN_WIDTH;
+                triProjected.points[1].y *= 0.5f * (float)SCREEN_HEIGHT;
+                triProjected.points[2].x *= 0.5f * (float)SCREEN_WIDTH;
+                triProjected.points[2].y *= 0.5f * (float)SCREEN_HEIGHT;
+
+                Mesh_add(vecTrianglesToRaster, triProjected);
+            }
         }
     }
 
@@ -191,8 +204,45 @@ void prepareScene(App *app){
 
     for(int i = 0; i < vecTrianglesToRaster->size; i++){
         Triangle t = Mesh_get(vecTrianglesToRaster, i);
-        draw_filledTriangle(app, t, t.col);
-        draw_triangle(app, t, (Color){0,0,0,255});
+        Triangle clipped[2];
+        Mesh *listTriangles = Mesh_new(32);
+        Mesh_add(listTriangles, t);
+        int numNewTris = 1;
+
+        for(int p = 0; p < 4; p++){
+            int numTrisToAdd = 0;
+            while(numNewTris > 0){
+                Triangle test = Mesh_get(listTriangles, 0);
+                Mesh_removeAt(listTriangles, 0);
+                numNewTris--;
+
+                switch(p){
+                    case 0: 
+                        numTrisToAdd = Triangle_clipAgainstPlane((Vec3d){ 0.0f,0.0f,0.0f,1.0f }, (Vec3d){ 0.0f,1.0f,0.0f,1.0f }, &test, &clipped[0], &clipped[1]);
+                    break;
+                    case 1: 
+                        numTrisToAdd = Triangle_clipAgainstPlane((Vec3d){ 0.0f,(float)SCREEN_HEIGHT-1,0.0f,1.0f }, (Vec3d){ 0.0f,-1.0f,0.0f,1.0f }, &test, &clipped[0], &clipped[1]);
+                    break;
+                    case 2: 
+                        numTrisToAdd = Triangle_clipAgainstPlane((Vec3d){ 0.0f,0.0f,0.0f,1.0f }, (Vec3d){ 1.0f,0.0f,0.0f,1.0f }, &test, &clipped[0], &clipped[1]);
+                    break;
+                    case 3: 
+                        numTrisToAdd = Triangle_clipAgainstPlane((Vec3d){ (float)SCREEN_WIDTH-1,0.0f,0.0f,1.0f }, (Vec3d){ -1.0f,0.0f,0.0f,1.0f }, &test, &clipped[0], &clipped[1]);
+                    break;
+                    default:break;
+                }
+
+                for(int w = 0; w < numTrisToAdd; w++)
+                    Mesh_add(listTriangles, clipped[w]);
+            }
+            numNewTris = listTriangles->size;
+        }
+
+        for(int a = 0; a < listTriangles->size; a++){
+            Triangle t = Mesh_get(listTriangles, a);
+            draw_filledTriangle(app, t, t.col);
+            //draw_triangle(app, t, (Color){0,0,0,255});
+        }
     }
 }
 

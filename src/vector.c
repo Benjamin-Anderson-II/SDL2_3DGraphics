@@ -59,3 +59,14 @@ Vec3d Vector_crossProd(Vec3d v1, Vec3d v2){
         1
     };
 }
+
+Vec3d Vector_intersectPlane(Vec3d plane_point, Vec3d plane_normal, Vec3d lineStart, Vec3d lineEnd){
+    plane_normal = Vector_normalize(plane_normal);
+    float plane_d = -Vector_dotProd(plane_normal, plane_point);
+    float ad = Vector_dotProd(lineStart, plane_normal);
+    float bd = Vector_dotProd(lineEnd, plane_normal);
+    float t  = (-plane_d - ad) / (bd - ad);
+    Vec3d lineStartToEnd = Vector_sub(lineEnd, lineStart);
+    Vec3d lineToIntersect = Vector_mult(lineStartToEnd, t);
+    return Vector_add(lineStart, lineToIntersect);
+}
