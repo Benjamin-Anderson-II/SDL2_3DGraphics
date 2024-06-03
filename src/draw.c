@@ -22,7 +22,7 @@ void draw_pixel(SDL_Surface *surface, Point p, Color c){
 }
 
 DynArr *_interpolate(int i0, int d0, int i1, int d1){
-    DynArr *values = DynArr_new(32);
+    DynArr *values = DynArr_new(32); //int
     if(i0 == i1){
         DynArr_add(values, (dynarr_u)d0);
         return values;
@@ -114,9 +114,9 @@ void draw_filledTriangle(App *app, Triangle t, Color c){
     if(p2.y < p1.y) _swapPoint(&p2, &p1);
 
     // Interpolate between the two points (inverted) and store the values in dynamic arrays
-    DynArr *x01 = _interpolate(p0.y, p0.x, p1.y, p1.x);
-    DynArr *x12 = _interpolate(p1.y, p1.x, p2.y, p2.x);
-    DynArr *x02 = _interpolate(p0.y, p0.x, p2.y, p2.x);
+    DynArr *x01 = _interpolate(p0.y, p0.x, p1.y, p1.x); //int
+    DynArr *x12 = _interpolate(p1.y, p1.x, p2.y, p2.x); //int
+    DynArr *x02 = _interpolate(p0.y, p0.x, p2.y, p2.x); //int
 
     // Last Value of x01 == First Value of x12
     if(x01->size + x12->size > x02->size)
@@ -125,8 +125,8 @@ void draw_filledTriangle(App *app, Triangle t, Color c){
 
     // FIGURE OUT WHICH IS LEFT AND WHICH IS RIGHT
     // get middle horizontal line (triangles are always convex)
-    DynArr *xLeft;
-    DynArr *xRight;
+    DynArr *xLeft;  //int
+    DynArr *xRight; //int
     int midLine = x02->size / 2;
     if(DynArr_get(x02, midLine).integer < DynArr_get(x01, midLine).integer) {
         xLeft = x02;

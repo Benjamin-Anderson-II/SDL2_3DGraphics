@@ -2,15 +2,16 @@
 #define DYNARR_H
 
 #include "matrix.h"
+#include "mesh.h"
 
 typedef union {
     int integer;
     float floating;
-    Triangle triangle;
     Vec3d vec3d;
     Mat4x4 mat4x4;
     Color color;
     Point point;
+    Mesh *mesh;
 } dynarr_u;
 
 typedef struct {
@@ -34,8 +35,6 @@ void DynArr_put(DynArr *v, int pos, dynarr_u val);
 void DynArr_swap(DynArr *v, int i, int j);
 void DynArr_removeAt(DynArr *v, int pos);
 void DynArr_merge(DynArr *v1, DynArr *v2);
-
-void Triangle_sortInc(DynArr *tris);
 
 // Retrieval
 dynarr_u DynArr_get(DynArr *v, int pos);

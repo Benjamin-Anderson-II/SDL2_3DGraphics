@@ -2,6 +2,7 @@
 #define DRAW_H
 
 #include <SDL2/SDL.h>
+#include "app.h"
 #include "misc.h"
 #include "dynarr.h"
 

@@ -9,7 +9,7 @@ Vec3d Vector_new();
 
 Vec3d Vector_add(Vec3d v1, Vec3d v2);
 Vec3d Vector_sub(Vec3d v1, Vec3d v2);
-Vec3d Vector_mul(Vec3d v, float k);
+Vec3d Vector_mult(Vec3d v, float k);
 Vec3d Vector_div(Vec3d v, float k);
 
 float Vector_dotProd(Vec3d v1, Vec3d v2);

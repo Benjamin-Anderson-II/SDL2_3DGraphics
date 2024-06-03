@@ -105,18 +105,3 @@ DynArr_merge(DynArr *v1, DynArr *v2){
     for(int i = 0; i < v2->size; i++)
         DynArr_add(v1, DynArr_get(v2, i));
 }
-
-/* QUICK SORT */
-int _compare(const void *a, const void *b){
-    Triangle *t1 = (Triangle *)a;
-    Triangle *t2 = (Triangle *)b;
-    float z1 = (t1->points[0].z + t1->points[1].z + t1->points[2].z) / 3.0f;
-    float z2 = (t2->points[0].z + t2->points[1].z + t2->points[2].z) / 3.0f;
-    return z1 < z2;
-}
-
-void Triangle_sortInc(DynArr *tris){
-    // This is just a wrapper function
-
-    qsort(tris->data, tris->size, sizeof(dynarr_u), _compare);
-}
