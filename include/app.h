@@ -7,22 +7,25 @@
 #include "dynarr.h"
 
 typedef struct {
-    float screen_height;
-    float screen_width;
+    int screen_height;
+    int screen_width;
 
-    SDL_Window *window;
+    SDL_Window  *window;
     SDL_Surface *surface;
 
-    DynArr *meshes; // mesh
+    MESH DynArr *meshes;
+
+    Mat4x4 mWorld;
     Mat4x4 mProj;
     Mat4x4 mCamera;
-    float fElapsedTime;
+    Mat4x4 mView;
+    float  fElapsedTime;
 
     Vec3d vCamera;
     Vec3d vLookDir;
     float fYaw;
 
-    DynArr *pixelDepthBuffer; // float
+    float *pixelDepthBuffer;
 } App;
 
 #endif

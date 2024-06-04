@@ -8,7 +8,7 @@
 
 int read_objAsMesh(char *fileName, Mesh *mesh){
     FILE *fp;
-    DynArr *verts; //Vec3d
+    VEC3D DynArr *verts;
     char line[255];
     if((fp = fopen(fileName, "r")) == NULL){
         fprintf(stderr, "Failed to Open File: %s\n", fileName);

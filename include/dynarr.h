@@ -4,13 +4,21 @@
 #include "matrix.h"
 #include "mesh.h"
 
+#define INT
+#define FLOAT
+#define VEC3D
+#define MAT4X4
+#define COLOR
+#define POINT
+#define MESH
+
 typedef union {
     int integer;
     float floating;
     Vec3d vec3d;
     Mat4x4 mat4x4;
     Color color;
-    Point point;
+    Pixel point;
     Mesh *mesh;
 } dynarr_u;
 
