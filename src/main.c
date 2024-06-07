@@ -1,9 +1,8 @@
 /**
  * TODO:
  *   
- *   *Actually* fix the mirrored XY issue (dread) [currently negating xy's in the file_importer and input]
+ *   *Actually* fix the mirrored XY issue (dread) [currently negating xy's in the file_importer and input and fYaw]
  *   Implement z-buffering
- *   Make keystrokes change velocity instead of position
  *
  *
  *    <- near the end ->
@@ -118,8 +117,10 @@ void resetScene(App *app){
 Mat4x4 createViewMatrix(App *app){
     Vec3d up = { 0,1,0,1 };
     Vec3d target = { 0,0,1,1 };
+    app->fYaw += app->vRotation.y;
     Mat4x4 matCameraRot = Matrix_makeRotationY(-app->fYaw);
     app->vLookDir = Matrix_multVector(target, matCameraRot);
+    app->vCamera = Vector_add(app->vCamera, app->vVelocity);
     target = Vector_add(app->vCamera, app->vLookDir);
 
     app->mCamera = Matrix_pointAt(app->vCamera, target, up);
@@ -251,8 +252,7 @@ void rasterMesh(App *app, Mesh *m){
 void prepareScene(App *app){
     resetScene(app);
 
-    app->mWorld = Matrix_makeTranslation(0.0f, 0.0f, 5.0f);
-
+    app->mWorld = Matrix_makeTranslation(0.0f, 0.0f, 5.0f); // might be different in the future
     app->mView = createViewMatrix(app);
 
     Mesh *trisToRaster;

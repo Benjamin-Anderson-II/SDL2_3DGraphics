@@ -16,27 +16,38 @@ int Input_do(App *app){
             default: break;
         }
         const Uint8 *state = SDL_GetKeyboardState(NULL);
-        Vec3d vForward = Vector_mult(app->vLookDir, 4.0f * app->fElapsedTime);
+        Vec3d vForward = Vector_mult(app->vLookDir, 10.0f * app->fElapsedTime);
+        // There's probably a more clever way to do this... maybe figure it out when the mouse is implemented
+        float rotationAmount = 0.1f;
 
+        // reset velocity to nothing (in case a key was un-pressed)
+        app->vVelocity = Vector_new();
+        app->vRotation = Vector_new();
 
         // This affects position. Make it affect velocity... somehow
         if(state[SDL_SCANCODE_UP])
-            app->vCamera.y -= 8.0f * app->fElapsedTime;
+            app->vVelocity.y = -1;
         if(state[SDL_SCANCODE_DOWN])
-            app->vCamera.y += 8.0f * app->fElapsedTime;
+            app->vVelocity.y = 1;
         if(state[SDL_SCANCODE_RIGHT])
-            app->vCamera.x += 8.0f * app->fElapsedTime;
+            app->vVelocity.x = 1;
         if(state[SDL_SCANCODE_LEFT])
-            app->vCamera.x -= 8.0f * app->fElapsedTime;
+            app->vVelocity.x = -1;
 
         if(state[SDL_SCANCODE_W])
-            app->vCamera = Vector_add(app->vCamera, vForward);
+            app->vVelocity = Vector_add(app->vVelocity, vForward);
         if(state[SDL_SCANCODE_S])
-            app->vCamera = Vector_sub(app->vCamera, vForward);
+            app->vVelocity = Vector_sub(app->vVelocity, vForward);
         if(state[SDL_SCANCODE_A])
-            app->fYaw -= 1.0f * app->fElapsedTime;
+            app->vRotation.y = -rotationAmount;
         if(state[SDL_SCANCODE_D])
-            app->fYaw += 1.0f * app->fElapsedTime;
+            app->vRotation.y = rotationAmount;
+
+        // normalize movement vector
+        Vector_normalize(app->vVelocity);
+
+        // mult it by something reasonable
+        app->vVelocity = Vector_mult(app->vVelocity, 0.5);
     }
 
     return 0;

@@ -17,13 +17,16 @@ typedef struct {
 
     Mat4x4 mWorld;
     Mat4x4 mProj;
-    Mat4x4 mCamera;
     Mat4x4 mView;
     float  fElapsedTime;
 
-    Vec3d vCamera;
-    Vec3d vLookDir;
-    float fYaw;
+    // CAMERA
+    Mat4x4 mCamera;  //translation matrix
+    Vec3d vCamera;   //position
+    Vec3d vLookDir;  //position
+    Vec3d vVelocity; //velocity
+    float fYaw;      //position
+    Vec3d vRotation; //velocity
 
     float *pixelDepthBuffer;
 } App;
